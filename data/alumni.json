@@ -1,0 +1,26 @@
+[
+  {
+    "name": "ziza",
+    "prodi": "informatika",
+    "tahun": "2027",
+    "status": "Identified",
+    "confidence": 74,
+    "source": "Google Scholar"
+  },
+  {
+    "name": "fira",
+    "prodi": "informatika",
+    "tahun": "2027",
+    "status": "Need Verification",
+    "confidence": 60,
+    "source": "Google Scholar"
+  },
+  {
+    "name": "jefa",
+    "prodi": "Hukum",
+    "tahun": "2028",
+    "status": "Identified",
+    "confidence": 96,
+    "source": "ResearchGate"
+  }
+]
