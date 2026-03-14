@@ -13,7 +13,16 @@ app.get("/alumni",(req,res)=>{
 })
 
 app.post("/alumni",(req,res)=>{
-    alumni.push(req.body)
+
+    const data = req.body
+
+    alumni.push({
+        name:data.name,
+        prodi:data.prodi,
+        tahun:data.tahun,
+        status:"Not Tracked"
+    })
+
     res.json({message:"Alumni ditambahkan"})
 })
 
@@ -44,11 +53,19 @@ app.post("/track/:id",(req,res)=>{
         status="Not Relevant"
     }
 
-    alumni[id].status=status
-    alumni[id].confidence=score
-    alumni[id].source=randomSource
+    if(alumni[id]){
 
-    res.json(alumni[id])
+        alumni[id].status=status
+        alumni[id].confidence=score
+        alumni[id].source=randomSource
+
+        res.json(alumni[id])
+
+    } else {
+
+        res.status(404).json({message:"Data tidak ditemukan"})
+
+    }
 
 })
 
