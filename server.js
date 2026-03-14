@@ -1,76 +1,57 @@
 const express = require("express")
-const fs = require("fs")
-const path = require("path")
 
 const app = express()
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 
 app.use(express.json())
 app.use(express.static("public"))
 
-const filePath = path.join(__dirname, "data", "alumni.json")
-
-function readData(){
-    return JSON.parse(fs.readFileSync(filePath))
-}
-
-function saveData(data){
-    fs.writeFileSync(filePath, JSON.stringify(data,null,2))
-}
+let alumni = []
 
 app.get("/alumni",(req,res)=>{
-    res.json(readData())
+    res.json(alumni)
 })
 
 app.post("/alumni",(req,res)=>{
-    const data = readData()
-    data.push(req.body)
-    saveData(data)
+    alumni.push(req.body)
     res.json({message:"Alumni ditambahkan"})
 })
 
 app.post("/track/:id",(req,res)=>{
 
-    const data = readData()
-    const id = req.params.id
+    const id=req.params.id
 
-    const alumni = data[id]
-
-    const sources = [
+    const sources=[
         "LinkedIn",
         "Google Scholar",
         "GitHub",
         "ResearchGate"
     ]
 
-    const randomSource = sources[Math.floor(Math.random()*sources.length)]
+    const randomSource=sources[Math.floor(Math.random()*sources.length)]
 
-    const score = Math.floor(Math.random()*100)
+    const score=Math.floor(Math.random()*100)
 
-    let status = ""
+    let status=""
 
-    if(score >= 70){
-        status = "Identified"
+    if(score>=70){
+        status="Identified"
     }
-    else if(score >= 40){
-        status = "Need Verification"
+    else if(score>=40){
+        status="Need Verification"
     }
     else{
-        status = "Not Relevant"
+        status="Not Relevant"
     }
 
-    alumni.status = status
-    alumni.confidence = score
-    alumni.source = randomSource
+    alumni[id].status=status
+    alumni[id].confidence=score
+    alumni[id].source=randomSource
 
-    data[id] = alumni
-
-    saveData(data)
-
-    res.json(alumni)
+    res.json(alumni[id])
 
 })
 
 app.listen(PORT,()=>{
-    console.log("Server running http://localhost:3000")
+    console.log("Server running")
 })
