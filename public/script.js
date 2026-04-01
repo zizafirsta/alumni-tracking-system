@@ -1,11 +1,27 @@
+const supabase = window.supabase.createClient(
+  "https://nimkxzrlfnhpbkszleet.supabase.co",
+  "YOUR_ANON_KEY"
+)
+
 let alumniData = []
 let chartInstance = null
 
 
+// =========================
+// LOAD DATA (GET)
+// =========================
 async function loadData() {
 
-    const res = await fetch("/alumni")
-    const data = await res.json()
+    const { data, error } = await supabase
+        .from("alumni")
+        .select("*")
+        .order("id", { ascending: true })
+
+    if (error) {
+        console.error(error)
+        alert("Gagal mengambil data")
+        return
+    }
 
     alumniData = data
 
@@ -15,6 +31,9 @@ async function loadData() {
 }
 
 
+// =========================
+// RENDER TABLE
+// =========================
 function renderTable(data) {
 
     const list = document.getElementById("list")
@@ -57,6 +76,9 @@ function renderTable(data) {
 }
 
 
+// =========================
+// INSERT DATA
+// =========================
 async function tambah() {
 
     const name = document.getElementById("name").value
@@ -68,13 +90,22 @@ async function tambah() {
         return
     }
 
-    await fetch("/alumni", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name, prodi, tahun })
-    })
+    const { error } = await supabase
+        .from("alumni")
+        .insert([
+            {
+                name,
+                prodi,
+                tahun,
+                status: "Not Tracked"
+            }
+        ])
+
+    if (error) {
+        console.error(error)
+        alert("Gagal menambahkan data")
+        return
+    }
 
     document.getElementById("name").value = ""
     document.getElementById("prodi").value = ""
@@ -84,6 +115,9 @@ async function tambah() {
 }
 
 
+// =========================
+// LOADING
+// =========================
 function showLoading() {
     document.getElementById("loading").style.display = "flex"
 }
@@ -93,32 +127,69 @@ function hideLoading() {
 }
 
 
+// =========================
+// TRACK (UPDATE)
+// =========================
 async function track(id) {
 
     showLoading()
 
-    await fetch("/track/" + id, {
-        method: "POST"
-    })
+    const sources = ["LinkedIn", "Google Scholar", "GitHub", "ResearchGate"]
+    const randomSource = sources[Math.floor(Math.random() * sources.length)]
+    const score = Math.floor(Math.random() * 100)
+
+    let status = ""
+
+    if (score >= 70) status = "Identified"
+    else if (score >= 40) status = "Need Verification"
+    else status = "Not Relevant"
+
+    const { error } = await supabase
+        .from("alumni")
+        .update({
+            status,
+            confidence: score,
+            source: randomSource
+        })
+        .eq("id", id)
 
     hideLoading()
+
+    if (error) {
+        console.error(error)
+        alert("Tracking gagal")
+        return
+    }
 
     loadData()
 }
 
 
+// =========================
+// DELETE
+// =========================
 async function hapus(id) {
 
     if (!confirm("Yakin ingin menghapus data alumni ini?")) return
 
-    await fetch("/alumni/" + id, {
-        method: "DELETE"
-    })
+    const { error } = await supabase
+        .from("alumni")
+        .delete()
+        .eq("id", id)
+
+    if (error) {
+        console.error(error)
+        alert("Gagal menghapus data")
+        return
+    }
 
     loadData()
 }
 
 
+// =========================
+// SEARCH
+// =========================
 function searchAlumni() {
 
     const keyword = document.getElementById("search").value.toLowerCase()
@@ -131,6 +202,9 @@ function searchAlumni() {
 }
 
 
+// =========================
+// FILTER STATUS
+// =========================
 function filterStatus(status) {
 
     if (!status) {
@@ -143,6 +217,9 @@ function filterStatus(status) {
 }
 
 
+// =========================
+// DETAIL
+// =========================
 function showDetail(id) {
 
     const a = alumniData.find(x => x.id == id)
@@ -158,6 +235,9 @@ function showDetail(id) {
 }
 
 
+// =========================
+// EXPORT CSV
+// =========================
 function exportCSV() {
 
     let csv = "Nama,Prodi,Tahun,Status,Confidence,Source\n"
@@ -176,6 +256,9 @@ function exportCSV() {
 }
 
 
+// =========================
+// DASHBOARD
+// =========================
 function updateDashboard(data) {
 
     let identified = 0
@@ -197,6 +280,9 @@ function updateDashboard(data) {
 }
 
 
+// =========================
+// CHART
+// =========================
 function renderChart(data) {
 
     let identified = 0
