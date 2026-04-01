@@ -1,6 +1,6 @@
 const supabase = window.supabase.createClient(
   "https://nimkxzrlfnhpbkszleet.supabase.co",
-  "YOUR_ANON_KEY"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbWt4enJsZm5ocGJrc3psZWV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMjU4ODIsImV4cCI6MjA5MDYwMTg4Mn0.NEYeykhAIgeuzKXBwVvmMJ1LVq16Qg-PsFb-m759lSc"
 )
 
 let alumniData = []
