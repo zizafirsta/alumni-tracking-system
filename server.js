@@ -1,74 +1,149 @@
-const express = require("express")
+import 'dotenv/config'
+import express from 'express'
+import { createClient } from '@supabase/supabase-js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
+
+// SUPABASE CONFIG
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+)
+
+
+// MIDDLEWARE
 app.use(express.json())
 app.use(express.static("public"))
 
-let alumni = []
 
-app.get("/alumni",(req,res)=>{
-    res.json(alumni)
+// TEST DATABASE
+app.get('/test-db', async (req, res) => {
+  const { data, error } = await supabase
+    .from('alumni')
+    .select('*')
+
+  if (error) return res.status(500).json({ error })
+
+  res.json(data)
 })
 
-app.post("/alumni",(req,res)=>{
 
-    const data = req.body
+// GET ALL ALUMNI
+app.get("/alumni", async (req, res) => {
+  const { data, error } = await supabase
+    .from('alumni')
+    .select('*')
+    .order('id', { ascending: true })
 
-    alumni.push({
-        name:data.name,
-        prodi:data.prodi,
-        tahun:data.tahun,
-        status:"Not Tracked"
+  if (error) return res.status(500).json({ error })
+
+  res.json(data)
+})
+
+
+// ADD ALUMNI
+app.post("/alumni", async (req, res) => {
+  try {
+    const { name, prodi, tahun } = req.body
+
+    if (!name || !prodi || !tahun) {
+      return res.status(400).json({ message: "Semua field wajib diisi" })
+    }
+
+    const { data, error } = await supabase
+      .from('alumni')
+      .insert([
+        {
+          name,
+          prodi,
+          tahun: parseInt(tahun),
+          status: "Not Tracked"
+        }
+      ])
+      .select()
+
+    if (error) throw error
+
+    res.json({
+      message: "Alumni berhasil ditambahkan",
+      data
     })
 
-    res.json({message:"Alumni ditambahkan"})
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.post("/track/:id",(req,res)=>{
 
-    const id=req.params.id
+// TRACK ALUMNI (SIMULASI)
 
-    const sources=[
-        "LinkedIn",
-        "Google Scholar",
-        "GitHub",
-        "ResearchGate"
-    ]
+app.post("/track/:id", async (req, res) => {
 
-    const randomSource=sources[Math.floor(Math.random()*sources.length)]
+  const id = req.params.id
 
-    const score=Math.floor(Math.random()*100)
-
-    let status=""
-
-    if(score>=70){
-        status="Identified"
+  // simulasi hasil pencarian (lebih realistis)
+  const candidates = [
+    {
+      name: "Muhammad Rizky",
+      role: "Software Engineer",
+      company: "Google",
+      location: "Jakarta"
+    },
+    {
+      name: "M Rizky",
+      role: "Backend Developer",
+      company: "Startup",
+      location: "Malang"
     }
-    else if(score>=40){
-        status="Need Verification"
-    }
-    else{
-        status="Not Relevant"
-    }
+  ]
 
-    if(alumni[id]){
+  // pilih kandidat terbaik (simulasi scoring)
+  const best = candidates[Math.floor(Math.random() * candidates.length)]
 
-        alumni[id].status=status
-        alumni[id].confidence=score
-        alumni[id].source=randomSource
+  const score = Math.floor(Math.random() * 100)
 
-        res.json(alumni[id])
+  let status = ""
+  if (score >= 70) status = "Identified"
+  else if (score >= 40) status = "Need Verification"
+  else status = "Not Relevant"
 
-    } else {
+  const { data, error } = await supabase
+    .from('alumni')
+    .update({
+      status,
+      confidence: score,
+      source: best.company
+    })
+    .eq('id', id)
+    .select()
 
-        res.status(404).json({message:"Data tidak ditemukan"})
-
-    }
-
+  res.json({
+    message: "Tracking selesai",
+    kandidat: best,
+    data
+  })
 })
 
-app.listen(PORT,()=>{
-    console.log("Server running")
+
+// DELETE (BONUS FITUR)
+
+app.delete("/alumni/:id", async (req, res) => {
+  const id = req.params.id
+
+  const { error } = await supabase
+    .from('alumni')
+    .delete()
+    .eq('id', id)
+
+  if (error) return res.status(500).json({ error })
+
+  res.json({ message: "Alumni dihapus" })
+})
+
+
+// START SERVER
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`)
 })
